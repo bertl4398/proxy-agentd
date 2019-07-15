@@ -15,7 +15,9 @@ func logTraffic(iface string, c chan int) {
 
 func main() {
 	var iface string
+	var socket string
 	flag.StringVar(&iface, "i", "lo", "capture interface")
+	flag.StringVar(&socket, "s", "cmdsrv__0", "command socket")
 	flag.Parse()
 
 	InitLocalRedis()
@@ -25,11 +27,10 @@ func main() {
 	flow_chan := make(chan int)
 	go logTraffic(iface, flow_chan)
 
-	socket := "cmdsrv__0"
 	log.Printf("Start command server at: %s", socket)
 	go StartUnixDomainSocketServer(socket)
 	defer StopUnixDomainSocketServer(socket)
-	
+
 	for {
 		select {
 		case <- flow_chan:
