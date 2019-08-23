@@ -37,10 +37,13 @@ func StartTcpSocketServer(wg *sync.WaitGroup) {
 func handleRequest(c net.Conn) {
   for {
     buf, err := ioutil.ReadAll(c)
+    if err != nil {
+      log.Error(err)
+    }
     var result map[string]interface{}
     json.Unmarshal([]byte(buf), &result)
 
-    cmd := string(result["message"])
+    cmd := result["message"].(string)
     executeCmd(cmd)
   }
 }
