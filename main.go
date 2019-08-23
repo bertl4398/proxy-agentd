@@ -1,40 +1,26 @@
 package main
 
 import (
-	"log"
 	"flag"
+	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func logTraffic(iface string, c chan int) {
-	num_flows, flows := Pktstat(iface)
-	if num_flows > 0 {
-		WriteRedisFlowBatch(flows)
-	}
-	c <- num_flows
-}
-
 func main() {
-	var iface string
-	var socket string
-	flag.StringVar(&iface, "i", "lo", "capture interface")
-	flag.StringVar(&socket, "s", "cmdsrv__0", "command socket")
+	var logfile string
+	var database string
+
+	flag.StringVar(&database, "d", "test", "influxDB database name")
+	flag.StringVar(&logfile, "f", "/var/log/ulog/gprint.log", "path to log file")
 	flag.Parse()
 
-	InitLocalRedis()
-	defer RedisConn.Close()
+	wg := new(sync.WaitGroup)
+	log.Info("Start logging traffic to influxDB")
+	wg.Add(1)
+	go StartLogTraffic(logfile, database, wg)
+	wg.Add(1)
+	go StartTcpSocketServer(wg)
 
-	log.Printf("Start capturing traffic at: %s", iface)
-	flow_chan := make(chan int)
-	go logTraffic(iface, flow_chan)
-
-	log.Printf("Start command server at: %s", socket)
-	go StartUnixDomainSocketServer(socket)
-	defer StopUnixDomainSocketServer(socket)
-
-	for {
-		select {
-		case <- flow_chan:
-			go logTraffic(iface, flow_chan)
-		}
-	}
+	wg.Wait()
 }
