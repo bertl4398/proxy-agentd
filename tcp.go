@@ -35,17 +35,16 @@ func StartTcpSocketServer(wg *sync.WaitGroup) {
 }
 
 func handleRequest(c net.Conn) {
-  for {
-    buf, err := ioutil.ReadAll(c)
-    if err != nil {
-      log.Error(err)
-    }
-    var result map[string]interface{}
-    json.Unmarshal([]byte(buf), &result)
+  defer c.Close()
 
-    cmd := result["message"].(string)
-    executeCmd(cmd)
-  }
+  buf, _ := ioutil.ReadAll(c)
+
+  var j map[string]interface{}
+
+  json.Unmarshal([]byte(buf), &j)
+
+  cmd := j["message"]
+  executeCmd(cmd.(string))
 }
 
 func executeCmd(cmd string) {
