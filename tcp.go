@@ -4,6 +4,8 @@ import (
   "net"
   "sync"
   "strings"
+  "io/ioutil"
+  "encoding/json"
 
   log "github.com/sirupsen/logrus"
 )
@@ -34,16 +36,11 @@ func StartTcpSocketServer(wg *sync.WaitGroup) {
 
 func handleRequest(c net.Conn) {
   for {
-    buf := make([]byte, 1024)
-    nr, err := c.Read(buf)
-    if err != nil {
-      return // EOF
-    }
-    data := buf[0:nr]
+    buf, err := ioutil.ReadAll(c)
+    var result map[string]interface{}
+    json.Unmarshal([]byte(buf), &result)
 
-    // log.Info("Server got", data)
-
-    cmd := string(data)
+    cmd := string(result["message"])
     executeCmd(cmd)
   }
 }
