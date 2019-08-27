@@ -56,7 +56,15 @@ func handleRequest(c net.Conn) {
 func executeCmd(data string) {
   var j map[string]interface{}
   json.Unmarshal([]byte(data), &j)
-  cmd := j["message"].(string)
+
+  msg := j["message"]
+  var cmd string
+  switch msg.(interface{}).(type) {
+  case string:
+    cmd = msg.(string)
+  default:
+    log.Warn(msg)
+  }
 
   switch {
   case strings.HasPrefix(cmd, "BLK"):
