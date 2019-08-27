@@ -1,0 +1,15 @@
+[Unit]
+Description=Proxy agent daemon service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/proxy-agentd
+StandardOutput=journal
+User=proxy-agent
+Group=proxy-agent
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target

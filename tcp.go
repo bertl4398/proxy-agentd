@@ -4,7 +4,7 @@ import (
   "net"
   "sync"
   "strings"
-  "io/ioutil"
+  "bufio"
   "encoding/json"
 
   log "github.com/sirupsen/logrus"
@@ -23,48 +23,66 @@ func StartTcpSocketServer(wg *sync.WaitGroup) {
     log.Fatal(err)
   }
   defer l.Close()
-  log.Info("Start listening on " + CONN_HOST + ":" + CONN_PORT)
+  log.WithFields(log.Fields{
+    "port": CONN_PORT,
+    "protocol": CONN_TYPE,
+  }).Info("server listening")
 
   for {
     conn, err := l.Accept()
     if err != nil {
-      log.Fatal(err)
+      log.Error(err)
+      continue
     }
+    defer conn.Close()
     go handleRequest(conn)
   }
 }
 
 func handleRequest(c net.Conn) {
-  defer c.Close()
-
-  buf, _ := ioutil.ReadAll(c)
-
-  var j map[string]interface{}
-
-  json.Unmarshal([]byte(buf), &j)
-
-  cmd := j["message"]
-  executeCmd(cmd.(string))
+  scanner := bufio.NewScanner(c)
+  for scanner.Scan() {
+    data := scanner.Text()
+    log.WithFields(log.Fields{
+      "data": data,
+    }).Debug("data received")
+    go executeCmd(data)
+  }
+  if err := scanner.Err(); err != nil {
+    log.Error(err)
+  }
 }
 
-func executeCmd(cmd string) {
+func executeCmd(data string) {
+  var j map[string]interface{}
+  json.Unmarshal([]byte(data), &j)
+  cmd := j["message"].(string)
+
   switch {
   case strings.HasPrefix(cmd, "BLK"):
     fields := strings.Fields(cmd)
     if len(fields) == 4 {
-      // proto := fields[1]
+      proto := fields[1]
       ip := fields[2]
       port := fields[3]
-      log.Printf("Block IP %s from port %s", ip, port)
+      log.WithFields(log.Fields{
+        "ip": ip,
+        "port": port,
+        "action": "blocK",
+      }).Info(cmd)
+      BlockIpAtPort(proto, ip, port)
     }
   case strings.HasPrefix(cmd, "RDR"):
     fields := strings.Fields(cmd)
     if len(fields) == 2 {
       ip := fields[1]
-      log.Printf("Redirect IP: %s", ip)
+      log.WithFields(log.Fields{
+        "ip": ip,
+        "action": "redirect",
+      }).Info(cmd)
       RedirectIp(ip)
     }
   default:
-    log.Info("Received command ", cmd)
+    log.Info(cmd)
   }
 }

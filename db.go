@@ -1,6 +1,7 @@
 package main
 
 import (
+  "os"
   "time"
   "sync"
   "strings"
@@ -55,6 +56,11 @@ func WriteGprint(s string, db string) {
 		default:
 		}
 	}
+  if csum <= 0 {
+    log.Warn("unknown entry")
+    return
+  }
+
 	tags := map[string]string{
 		"ip.saddr": srcip,
 	  "ip.daddr": dstip,
@@ -77,11 +83,15 @@ func WriteGprint(s string, db string) {
 	if err := c.Close(); err != nil {
 		log.Fatal(err)
 	}
+
+  log.Info(pt.String())
 }
 
 func StartLogTraffic(logfile string, database string, wg *sync.WaitGroup) {
   defer wg.Done()
   t, _ := tail.TailFile(logfile, tail.Config{
+    Logger: log.StandardLogger(),
+    Location: &tail.SeekInfo{0, os.SEEK_END},
     Follow: true,
     ReOpen: true})
   for line := range t.Lines {
