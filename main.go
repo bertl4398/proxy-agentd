@@ -1,13 +1,18 @@
 package main
 
 import (
+	"os"
 	"flag"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
 )
 
+
 func main() {
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+
 	var logfile string
 	var database string
 

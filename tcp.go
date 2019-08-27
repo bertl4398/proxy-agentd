@@ -43,10 +43,12 @@ func handleRequest(c net.Conn) {
   scanner := bufio.NewScanner(c)
   for scanner.Scan() {
     data := scanner.Text()
-    log.WithFields(log.Fields{
-      "data": data,
-    }).Debug("data received")
-    go executeCmd(data)
+    // log.WithFields(log.Fields{
+    //   "data": data,
+    // }).Debug("data received")
+    if len(data) > 0 {
+      go executeCmd(data)
+    }
   }
   if err := scanner.Err(); err != nil {
     log.Error(err)

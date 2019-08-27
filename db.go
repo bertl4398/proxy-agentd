@@ -7,10 +7,10 @@ import (
   "strings"
   "strconv"
 
-	"github.com/hpcloud/tail"
+  "github.com/hpcloud/tail"
   log "github.com/sirupsen/logrus"
-	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
-	client "github.com/influxdata/influxdb1-client/v2"
+  _ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
+  client "github.com/influxdata/influxdb1-client/v2"
 )
 
 func WriteGprint(s string, db string) {
@@ -84,7 +84,7 @@ func WriteGprint(s string, db string) {
 		log.Fatal(err)
 	}
 
-  log.Info(pt.String())
+  // log.Info(pt.String())
 }
 
 func StartLogTraffic(logfile string, database string, wg *sync.WaitGroup) {
