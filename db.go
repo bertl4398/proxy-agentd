@@ -1,16 +1,16 @@
 package main
 
 import (
-  "os"
-  "time"
-  "sync"
-  "strings"
-  "strconv"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 
-  "github.com/hpcloud/tail"
-  log "github.com/sirupsen/logrus"
-  _ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
-  client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/hpcloud/tail"
+	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
+	client "github.com/influxdata/influxdb1-client/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 func WriteGprint(s string, db string) {
@@ -56,14 +56,14 @@ func WriteGprint(s string, db string) {
 		default:
 		}
 	}
-  if csum <= 0 {
-    log.Warn("unknown entry")
-    return
-  }
+	if csum <= 0 {
+		log.Warn("unknown entry")
+		return
+	}
 
 	tags := map[string]string{
-		"ip.saddr": srcip,
-	  "ip.daddr": dstip,
+		"ip.saddr":  srcip,
+		"ip.daddr":  dstip,
 		"mac.saddr": srcmac,
 		"tcp.sport": srcport,
 		"tcp.dport": dstport,
@@ -84,18 +84,18 @@ func WriteGprint(s string, db string) {
 		log.Fatal(err)
 	}
 
-  // log.Info(pt.String())
+	// log.Info(pt.String())
 }
 
 func StartLogTraffic(logfile string, database string, wg *sync.WaitGroup) {
-  defer wg.Done()
-  t, _ := tail.TailFile(logfile, tail.Config{
-    Logger: log.StandardLogger(),
-    Location: &tail.SeekInfo{0, os.SEEK_END},
-    Follow: true,
-    ReOpen: true})
-  for line := range t.Lines {
-    s := line.Text
-    WriteGprint(s, database)
-  }
+	defer wg.Done()
+	t, _ := tail.TailFile(logfile, tail.Config{
+		Logger:   log.StandardLogger(),
+		Location: &tail.SeekInfo{0, os.SEEK_END},
+		Follow:   true,
+		ReOpen:   true})
+	for line := range t.Lines {
+		s := line.Text
+		WriteGprint(s, database)
+	}
 }
